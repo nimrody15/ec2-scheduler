@@ -1,0 +1,237 @@
+{
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Resources":{
+      "Ec2SchedulerLambdaRole":{
+         "Type":"AWS::IAM::Role",
+         "Properties":{
+           "AssumeRolePolicyDocument": {
+    					"Statement": [
+    						{
+    							"Effect": "Allow",
+    							"Principal": {
+    								"Service": [
+    									"lambda.amazonaws.com"
+    								]
+    							},
+    							"Action": [
+    								"sts:AssumeRole"
+    							]
+    						}
+    					]
+    				},
+            "Policies":[{
+              "PolicyName": "Ec2SchedulerLambdaPolicy",
+              "PolicyDocument": {
+               "Version":"2012-10-17",
+               "Statement":[
+                  {
+                     "Effect":"Allow",
+                     "Action":[
+                        "lambda:InvokeFunction"
+                     ],
+                     "Resource":"*"
+                  },
+                  {
+                     "Effect":"Allow",
+                     "Action":[
+                        "ec2:DescribeInstances",
+                        "ec2:StopInstances",
+                        "ec2:StartInstances"
+                     ],
+                     "Resource":"*"
+                  },
+                  {
+                     "Effect":"Allow",
+                     "Action":[
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                     ],
+                     "Resource":"arn:aws:logs:*:*:*"
+                  }
+               ]
+              }
+            }]
+         }
+      },
+      "Ec2SchedulerLambdaPermission":{
+         "Type":"AWS::Lambda::Permission",
+         "Properties":{
+            "Action":"lambda:InvokeFunction",
+            "FunctionName":{
+               "Fn::GetAtt":[
+                  "Ec2SchedulerLambda",
+                  "Arn"
+               ]
+            },
+            "Principal":"events.amazonaws.com",
+            "SourceArn":{
+               "Fn::GetAtt":[
+                  "CloudWatchTrigger",
+                  "Arn"
+               ]
+            }
+         }
+      },
+      "CloudWatchTrigger":{
+         "Type":"AWS::Events::Rule",
+         "Properties":{
+            "Description":"CloudWatch event which which will trigger EC2 Scheduler",
+            "ScheduleExpression":{
+               "Fn::Join":[
+                  "",
+                  [
+                     "cron(0/",
+                     {
+                        "Ref":"SchedulerMinutes"
+                     },
+                     " * ? * SUN-THU *)"
+                  ]
+               ]
+            },
+            "Targets":[ {
+               "Arn": {
+                  "Fn::GetAtt":[
+                     "Ec2SchedulerLambda",
+                     "Arn"
+                  ]
+               },
+               "Id": "Ec2_Scheduler_target"
+            }],
+            "Name":"Ec2_Scheduler_Rule",
+            "State":"ENABLED"
+         }
+      },
+      "Ec2SchedulerLambda":{
+         "Type":"AWS::Lambda::Function",
+         "Properties":{
+            "Code":{
+               "ZipFile":{
+                  "Fn::Join":[
+                     "\n",
+                     [
+                        "import os",
+                        "import boto3",
+                        "import json",
+                        "from datetime import datetime",
+                        "from datetime import timedelta",
+                        "",
+                        "def lambda_handler(event, context):",
+                        "    ",
+                        "    ec2Client = boto3.client('ec2')",
+                        "    #regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]",
+                        "    regions = ['eu-north-1']",
+                        "    print (regions)",
+                        "    currentTime = datetime.now() + timedelta(hours=3)",
+                        "    print (currentTime)",
+                        "    ",
+                        "    for regionName in regions:",
+                        "        print('~~~~~~Region:{0}~~~~~~'.format(regionName))",
+                        "        ec2Client = boto3.client('ec2', region_name=regionName)",
+                        "        response = ec2Client.describe_instances(MaxResults=100)",
+                        "        print (response)",
+                        "        ",
+                        "        instancesToStop = []",
+                        "        instancesToStart = []",
+                        "        for reservations in response['Reservations']:",
+                        "            instanceId = ''",
+                        "            instanceName = ''",
+                        "            state = ''",
+                        "            retainInstance = False",
+                        "            ",
+                        "            for instanceDetails in reservations['Instances']:",
+                        "                instanceId = instanceDetails['InstanceId']",
+                        "                ",
+                        "                # ignore spot and scheduled instances",
+                        "                if 'InstanceLifecycle' in instanceDetails.keys():",
+                        "                    continue",
+                        "                ",
+                        "                state = instanceDetails['State']",
+                        "                if 'Tags' in instanceDetails:",
+                        "                    for tag in instanceDetails['Tags']:",
+                        "                        if tag['Key'] == 'Name':",
+                        "                            instanceName = tag['Value'] if tag['Value'] != '' else 'Instance with no name'",
+                        "                            ",
+                        "                        if tag['Key'] == 'PowerOff':",
+                        "                            poweroffTag = tag['Value'].split(':')",
+                        "                            poweroffTime = currentTime.replace(hour=int(poweroffTag[0]), minute=int(poweroffTag[1])) ",
+                        "                            if  (poweroffTime <= currentTime <= poweroffTime + timedelta(minutes=65)) and (state['Name'] == 'running'):",
+                        "                                print('instance: {0}({1}) will be shut down'.format(instanceName,instanceId))",
+                        "                                instancesToStop.append(instanceId)",
+                        "                                ",
+                        "                        if tag['Key'] == 'PowerOn':",
+                        "                            poweronTag = tag['Value'].split(':')",
+                        "                            print(poweronTag)",
+                        "                            poweronTime = currentTime.replace(hour=int(poweronTag[0]), minute=int(poweronTag[1])) ",
+                        "                            if  poweronTime <= currentTime <= (poweronTime + timedelta(minutes=65)) and (state['Name'] == 'stopped'):",
+                        "                                print('instance {0}({1}) will be shut down'.format(instanceName,instanceId))",
+                        "                                instancesToStart.append(instanceId)",
+                        "                                ",
+                        "                # if not retainInstance  and state['Name'] == 'running':",
+                        "                #     print ('Instance:{0}, Name {1} will be stopped'.format(instanceId, instanceName))",
+                        "                #     instancesToStop.append(instanceId)",
+                        "                # elif retainInstance == True:",
+                        "                #     print ('Instance:{0}, Name: {1} with tag retain, keep it on'.format(instanceId, instanceName))",
+                        "        if (len (instancesToStop) <= 0):",
+                        "            print ('No Instances found to stop')",
+                        "        else:",
+                        "            res = ec2Client.stop_instances(",
+                        "                InstanceIds = instancesToStop,",
+                        "                DryRun = False",
+                        "            )",
+                        "            ",
+                        "        if (len (instancesToStart) <= 0):",
+                        "            print ('No Instances found to start')",
+                        "        else:",
+                        "            res = ec2Client.start_instances(",
+                        "                InstanceIds = instancesToStart,",
+                        "                DryRun = False",
+                        "            )",
+                        "            ",
+                        "            ",
+                        "        print ('~~~~~~Region {0} - Stopped {1} instnaces~~~~~~'.format(regionName, len(instancesToStop)))",
+                        "        print ('~~~~~~Region {0} - Started {1} instnaces~~~~~~'.format(regionName, len(instancesToStart)))"
+                     ]
+                  ]
+               }
+            },
+            "Description":"Lambda to Start/Stop instances",
+            "FunctionName":"Ec2SchedulerLambda",
+            "Handler":"index.lambda_handler",
+            "Role":{
+               "Fn::GetAtt":[
+                  "Ec2SchedulerLambdaRole",
+                  "Arn"
+               ]
+            },
+            "Runtime":"python3.6",
+            "Timeout":1
+         }
+      }
+   },
+   "Parameters":{
+      "SchedulerMinutes":{
+         "Type":"String",
+         "Description":"Enter the number of minutes between events."
+      }
+   },
+   "Metadata":{
+      "AWS::CloudFormation::Interface":{
+         "ParameterGroups":[
+            {
+               "Label":{
+                  "default":"Lambda Scheduler"
+               },
+               "Parameters":[
+                  "SchedulerMinutes"
+               ]
+            }
+         ],
+         "ParameterLabels":{
+            "SchedulerMinutes":{
+               "default":"Lambda Intervals"
+            }
+         }
+      }
+   }
+}
