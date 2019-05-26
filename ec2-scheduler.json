@@ -125,7 +125,7 @@
                         "    currentTime = datetime.now() + timedelta(hours=3)\n",
                         "    \n",
                         "    for regionName in regions:\n",
-                        "        print('~~~~~~Region:{0}~~~~~~'.format(regionName))\n",
+                        "        print('-------- Region:{0} ---------'.format(regionName))\n",
                         "        ec2Client = boto3.client('ec2', region_name=regionName)\n",
                         "        response = ec2Client.describe_instances(MaxResults=100)\n",
                         "        \n",
@@ -185,8 +185,8 @@
                         "            )\n",
                         "            \n",
                         "            \n",
-                        "        print ('§§§§§§§§§§ Region {0} - Stopped {1} instnaces §§§§§§§§§§'.format(regionName, len(instancesToStop)))\n",
-                        "        print ('~~~~~~Region {0} - Started {1} instnaces~~~~~~'.format(regionName, len(instancesToStart)))\n"
+                        "        print ('~~~~~~ Region {0} - Stopped {1} instnaces ~~~~~~'.format(regionName, len(instancesToStop)))\n",
+                        "        print ('~~~~~~ Region {0} - Started {1} instnaces ~~~~~~'.format(regionName, len(instancesToStart)))\n"
                      ]
                   ]
                }
@@ -194,15 +194,14 @@
             "Description":"Lambda to Start/Stop instances",
             "FunctionName":"Ec2SchedulerLambda",
             "Handler":"index.lambda_handler",
-            "Timeout": 60
+            "Timeout": 60,
             "Role":{
                "Fn::GetAtt":[
                   "Ec2SchedulerLambdaRole",
                   "Arn"
                ]
             },
-            "Runtime":"python3.6",
-            "Timeout":1
+            "Runtime":"python3.6"
          }
       }
    },
