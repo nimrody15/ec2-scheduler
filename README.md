@@ -22,13 +22,14 @@ How To Use The Solution
 ------------------------
 
 * Clone the solution to your computer
-![step1](https://i.postimg.cc/fTRGKZfR/cfn1.png "Step1")
 
 * Deploy the cloudformation using S3 uplod/ CLI/ Designer...
   For Example: Copy the content of the file ec2-scheduler.json and deploy it in Cloudformation Designer
-![step2](https://i.postimg.cc/L6QrQ7xB/cfn2.png "Step2")
+![step1](https://i.postimg.cc/fTRGKZfR/cfn1.png "Step1")
 
 * Give the Cloudformation Stack a name, set the desired Lambda intervals (default 15 minutes)
+![step2](https://i.postimg.cc/L6QrQ7xB/cfn2.png "Step2")
+
 * Tag your instances
 ![step3](https://i.postimg.cc/13gbkHTx/cfn3.png "Step3")
 
