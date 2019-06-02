@@ -18,6 +18,12 @@ Tag Value: 09:00
 
 ** NOTE ** The solution affecting only Instances With PowerOff/PowerOn tags, Instances without these tags are not affected
 
+** Optional ** If ypu want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest.
+If you want to keep instances on add the below tag:
+
+TagName: KeepAlive  
+Tag Value: true
+
 How To Use The Solution
 ------------------------
 
@@ -28,7 +34,8 @@ How To Use The Solution
 ![step1](https://i.postimg.cc/fTRGKZfR/cfn1.png "Step1")
 
 * Give the Cloudformation Stack a name, set the desired Lambda intervals (default 15 minutes)
-![step2](https://i.postimg.cc/L6QrQ7xB/cfn2.png "Step2")
+* Optional - Enter time for End of day Event to shut down all untagged instances
+![step2](https://i.postimg.cc/022wvm0z/ec2-scheduler.png "Step2")
 
 * Tag your instances
 ![step3](https://i.postimg.cc/13gbkHTx/cfn3.png "Step3")
