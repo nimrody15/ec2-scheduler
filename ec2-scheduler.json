@@ -355,7 +355,7 @@
                "default":"Lambda Intervals"
             },
             "EODTime":{
-               "default":"End of day hour"
+               "default":"End of day hour (GMT)"
             }
          }
       }
