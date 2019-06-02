@@ -9,10 +9,10 @@ Tag the instances you want to manage and the scheduler will do the rest.
 Example for tags:
 
 TagName: PowerOn  
-Tag Value: 18:00
+Tag Value: 09:00
 
 TagName: PowerOff  
-Tag Value: 09:00
+Tag Value: 18:00
 
 **That's it, you'r all set!** Instances will be powered on and off according to your tags
 
