@@ -1,21 +1,17 @@
 import os
 import boto3
 import json
-from datetime import datetime
-from datetime import timedelta
 
 def lambda_handler(event, context):
 
     ec2Client = boto3.client('ec2')
-    regions = ['eu-north-1']
-    print (regions)
-    currentTime = datetime.now() + timedelta(hours=3)
-    print (currentTime)
+    regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]
+    #regions = ['eu-north-1']
 
     for regionName in regions:
         print('~~~~~~Region:{0}~~~~~~'.format(regionName))
         ec2Client = boto3.client('ec2', region_name=regionName)
-        response = ec2Client.describe_instances(MaxResults=100)
+        response = ec2Client.describe_instances(MaxResults=1000)
         print (response)
 
         instancesToStop = []
@@ -39,9 +35,9 @@ def lambda_handler(event, context):
                             instanceName = tag['Value'] if tag['Value'] != '' else 'Instance with no name'
 
                         if tag['Key'] == 'KeepAlive':
-                            isKeepAlive = True if tag['Value'] == 'true' else False
+                            isKeepAlive = True if tag['Value'].lower() == 'true' else False
                             if isKeepAlive and state['Name'] == 'running':
-                                print ("DEBUG: Instance with keep alive tag ignoring")
+                                print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))
                             else:
                                 instancesToStop.append(instanceId)
                 else:
@@ -56,6 +52,3 @@ def lambda_handler(event, context):
             )
 
         print ('~~~~~~Region {0} - End Of Day - Stopped {1} instnaces~~~~~~'.format(regionName, len(instancesToStop)))
-
-
-
