@@ -7,16 +7,14 @@ from datetime import timedelta
 def lambda_handler(event, context):
 
     ec2Client = boto3.client('ec2')
-    regions = ['eu-north-1']
-    print (regions)
+    regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]
+    #regions = ['eu-north-1']
     currentTime = datetime.now() + timedelta(hours=3)
-    print (currentTime)
 
     for regionName in regions:
-        print('~~~~~~Region:{0}~~~~~~'.format(regionName))
+        print('-------- Region:{0} ---------'.format(regionName))
         ec2Client = boto3.client('ec2', region_name=regionName)
         response = ec2Client.describe_instances(MaxResults=100)
-        print (response)
 
         instancesToStop = []
         instancesToStart = []
@@ -48,9 +46,12 @@ def lambda_handler(event, context):
 
                         if tag['Key'] == 'PowerOn':
                             poweronTag = tag['Value'].split(':')
-                            print(poweronTag)
                             poweronTime = currentTime.replace(hour=int(poweronTag[0]), minute=int(poweronTag[1]))
-                            if  poweronTime <= currentTime <= (poweronTime + timedelta(minutes=65)) and (state['Name'] == 'stopped'):
+                            if  poweronTime <= currentTime <= (poweronTime + timedelta(minutes=
+                             {
+                                "Ref":"SchedulerMinutes"
+                             },
+                             )) and (state['Name'] == 'stopped'):
                                 print('instance {0}({1}) will be shut down'.format(instanceName,instanceId))
                                 instancesToStart.append(instanceId)
 
@@ -71,8 +72,5 @@ def lambda_handler(event, context):
             )
 
 
-        print ('~~~~~~Region {0} - Stopped {1} instnaces~~~~~~'.format(regionName, len(instancesToStop)))
-        print ('~~~~~~Region {0} - Started {1} instnaces~~~~~~'.format(regionName, len(instancesToStart)))
-
-
-
+        print ('~~~~~~ Region {0} - Stopped {1} instnaces ~~~~~~'.format(regionName, len(instancesToStop)))
+        print ('~~~~~~ Region {0} - Started {1} instnaces ~~~~~~'.format(regionName, len(instancesToStart)))

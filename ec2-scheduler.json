@@ -127,7 +127,7 @@
                         "    for regionName in regions:\n",
                         "        print('-------- Region:{0} ---------'.format(regionName))\n",
                         "        ec2Client = boto3.client('ec2', region_name=regionName)\n",
-                        "        response = ec2Client.describe_instances(MaxResults=100)\n",
+                        "        response = ec2Client.describe_instances(MaxResults=1000)\n",
                         "        \n",
                         "        instancesToStop = []\n",
                         "        instancesToStart = []\n",
@@ -203,6 +203,116 @@
             },
             "Runtime":"python3.6"
          }
+      },
+      "CloudWatchEODTrigger":{
+         "Type":"AWS::Events::Rule",
+         "Properties":{
+            "Description":"CloudWatch event which which will trigger EC2 Scheduler After work hours",
+            "ScheduleExpression":{
+               "Fn::Join":[
+                  "",
+                  [
+                     "cron(",
+                     {
+                        "Fn::If": ["EODValueEmpty", "0 19 ? * * *", "30 19 ? * * *"]
+                     },
+                     ")"
+                  ]
+               ]
+            },
+            "Targets":[ {
+               "Arn": {
+                  "Fn::GetAtt":[
+                     "Ec2SchedulerLambda",
+                     "Arn"
+                  ]
+               },
+               "Id": "Ec2_Scheduler_target"
+            }],
+            "Name":"Ec2_Scheduler_EOD_Rule",
+            "State":{
+               "Fn::If": ["EODValueEmpty", "DISABLED", "ENABLED"]
+            }
+         }
+      },
+      "Ec2SchedulerEODLambda":{
+         "Type":"AWS::Lambda::Function",
+         "Properties":{
+            "Code":{
+               "ZipFile":{
+                  "Fn::Join":[
+                     "",
+                     [
+                        "import os\n",
+                        "import boto3\n",
+                        "import json\n",
+                        "\n",
+                        "def lambda_handler(event, context):\n",
+                        "\n",
+                        "    ec2Client = boto3.client('ec2')\n",
+                        "    regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]\n",
+                        "    #regions = ['eu-north-1']\n",
+                        "\n",
+                        "    for regionName in regions:\n",
+                        "        print('~~~~~~Region:{0}~~~~~~'.format(regionName))\n",
+                        "        ec2Client = boto3.client('ec2', region_name=regionName)\n",
+                        "        response = ec2Client.describe_instances(MaxResults=1000)\n",
+                        "        print (response)\n",
+                        "\n",
+                        "        instancesToStop = []\n",
+                        "        for reservations in response['Reservations']:\n",
+                        "            instanceId = ''\n",
+                        "            instanceName = ''\n",
+                        "            state = ''\n",
+                        "            retainInstance = False\n",
+                        "\n",
+                        "            for instanceDetails in reservations['Instances']:\n",
+                        "                instanceId = instanceDetails['InstanceId']\n",
+                        "\n",
+                        "                # ignore spot and scheduled instances\n",
+                        "                if 'InstanceLifecycle' in instanceDetails.keys():\n",
+                        "                    continue\n",
+                        "\n",
+                        "                state = instanceDetails['State']\n",
+                        "                if 'Tags' in instanceDetails:\n",
+                        "                    for tag in instanceDetails['Tags']:\n",
+                        "                        if tag['Key'] == 'Name':\n",
+                        "                            instanceName = tag['Value'] if tag['Value'] != '' else 'Instance with no name'\n",
+                        "\n",
+                        "                        if tag['Key'] == 'KeepAlive':\n",
+                        "                            isKeepAlive = True if tag['Value'].lower() == 'true' else False\n",
+                        "                            if isKeepAlive and state['Name'] == 'running':\n",
+                        "                                print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))\n",
+                        "                            else:\n",
+                        "                                instancesToStop.append(instanceId)\n",
+                        "                else:                \n",
+                        "                    instancesToStop.append(instanceId)\n",
+                        "                \n",
+                        "        if (len (instancesToStop) <= 0):\n",
+                        "            print ('No Instances found to stop')\n",
+                        "        else:\n",
+                        "            res = ec2Client.stop_instances(\n",
+                        "                InstanceIds = instancesToStop,\n",
+                        "                DryRun = False\n",
+                        "            )\n",
+                        "\n",
+                        "        print ('~~~~~~Region {0} - End Of Day - Stopped {1} instnaces~~~~~~'.format(regionName, len(instancesToStop)))\n"
+                     ]
+                  ]
+               }
+            },
+            "Description":"Lambda to Stop instances at the end of day",
+            "FunctionName":"Ec2SchedulerEODLambda",
+            "Handler":"index.lambda_handler",
+            "Timeout": 60,
+            "Role":{
+               "Fn::GetAtt":[
+                  "Ec2SchedulerLambdaRole",
+                  "Arn"
+               ]
+            },
+            "Runtime":"python3.6"
+         }
       }
    },
    "Parameters":{
@@ -210,6 +320,21 @@
          "Type":"String",
          "Description":"Enter the number of minutes between events.",
          "Default":"15"
+      },
+      "EODTime":{
+         "Type":"String",
+         "Description":"Enter the time that all untagged instances will be shut down (Optional - Leave empty if not wanted).",
+         "Default":"19:30"
+      }
+   },
+   "Conditions":{
+      "EODValueEmpty":{
+         "Fn::Equals":[
+            "",
+            {
+               "Ref":"EODTime"
+            }
+         ]
       }
    },
    "Metadata":{
@@ -220,13 +345,17 @@
                   "default":"Lambda Scheduler"
                },
                "Parameters":[
-                  "SchedulerMinutes"
+                  "SchedulerMinutes",
+                  "EODTime"
                ]
             }
          ],
          "ParameterLabels":{
             "SchedulerMinutes":{
                "default":"Lambda Intervals"
+            },
+            "EODTime":{
+               "default":"End of day hour"
             }
          }
       }
