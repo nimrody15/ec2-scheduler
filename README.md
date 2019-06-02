@@ -18,7 +18,7 @@ Tag Value: 09:00
 
 ** NOTE ** The solution affecting only Instances With PowerOff/PowerOn tags, Instances without these tags are not affected
 
-** Optional ** If ypu want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest.
+** Optional ** If you want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest. If you don't, clear the field and the Lambda wont be triggered.
 If you want to keep instances on add the below tag:
 
 TagName: KeepAlive  
