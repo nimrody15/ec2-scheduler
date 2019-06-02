@@ -122,7 +122,7 @@
                         "    ec2Client = boto3.client('ec2')\n",
                         "    regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]\n",
                         "    #regions = ['eu-north-1']\n",
-                        "    currentTime = datetime.now() + timedelta(hours=3)\n",
+                        "    currentTime = datetime.now() + timedelta(hours=0)\n",
                         "    \n",
                         "    for regionName in regions:\n",
                         "        print('-------- Region:{0} ---------'.format(regionName))\n",
