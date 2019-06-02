@@ -16,12 +16,16 @@ Tag Value: 18:00
 
 **That's it, you'r all set!** Instances will be powered on and off according to your tags
 
-**NOTE** The solution affecting only Instances With PowerOff/PowerOn tags, Instances without these tags are not affected
-           
-**Also Note**, The Tags for PowerOn/PowerOff Should be in GMT time
+## Read Before Running The Solution
 
-**Optional** If you want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest. If you don't, clear the field and the Lambda wont be triggered.
-If you want to keep instances on add the below tag:
+1. The solution affecting only Instances With PowerOff/PowerOn tags, Instances without these tags are not affected
+           
+2. The Tags for PowerOn/PowerOff Should be in GMT time
+
+3. If you want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest. If you don't, clear the field and the Lambda wont be triggered.
+**Important** If you Don't want the End Of Day solution and you don't clear the input field - ALL INSTANCES WILL BE SHUT DOWN.
+
+4. If you want to keep instances on add the below tag:
 
 TagName: KeepAlive  
 Tag Value: true
