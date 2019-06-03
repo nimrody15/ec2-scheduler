@@ -19,7 +19,8 @@ Tag Value: 18:00
 
 1. If you want to shut down all instances at the end of each day, choose end of day parameter to 'Yes'
 
-2. Insert the time want to shut down the instances (GMT)
+2. Insert the time want to shut down the instances (GMT).
+
 **Important** Once you choose 'Yes' - ALL INSTANCES WILL BE SHUT DOWN AT THAT SPECIFIC TIME.
 
 3. If you want to keep instances and ignore end of day shut down,add the below tag:
