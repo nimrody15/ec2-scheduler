@@ -214,9 +214,23 @@
                   [
                      "cron(",
                      {
-                        "Fn::If": ["EODValueEmpty", "0 19 ? * * *", "30 19 ? * * *"]
+                        "Fn::If": ["EODAccepted",
+                           {
+                              "Fn::Select" : [1, { "Fn::Split" : [":",  { "Ref": "EODTime" } ]}]
+                           },
+                           "30"
+                        ]
                      },
-                     ")"
+                     " ",
+                     {
+                        "Fn::If": ["EODAccepted",
+                           {
+                              "Fn::Select" : [0, { "Fn::Split" : [":",  { "Ref": "EODTime" } ]}]
+                           },
+                           "00"
+                        ]
+                     },
+                     " ? * * *)"
                   ]
                ]
             },
@@ -231,7 +245,7 @@
             }],
             "Name":"Ec2_Scheduler_EOD_Rule",
             "State":{
-               "Fn::If": ["EODValueEmpty", "DISABLED", "ENABLED"]
+               "Fn::If": ["EODAccepted", "ENABLED", "DISABLED"]
             }
          }
       },
@@ -321,18 +335,27 @@
          "Description":"Enter the number of minutes between events.",
          "Default":"15"
       },
+      "EODBool":{
+         "Type":"String",
+         "Description":"Enable End of day scheduling to stop all instances at a specific hour",
+         "AllowedValues":[
+            "Yes",
+            "No"
+         ],
+         "Default": "No"
+      },
       "EODTime":{
          "Type":"String",
-         "Description":"Enter the time that all untagged instances will be shut down (Optional - Leave empty if not wanted).",
+         "Description":"Enter the time that all untagged instances will be shut down. (only if marked Yes)",
          "Default":"19:30"
       }
    },
    "Conditions":{
-      "EODValueEmpty":{
+      "EODAccepted":{
          "Fn::Equals":[
-            "",
+            "Yes",
             {
-               "Ref":"EODTime"
+               "Ref":"EODBool"
             }
          ]
       }
@@ -346,6 +369,7 @@
                },
                "Parameters":[
                   "SchedulerMinutes",
+                  "EODBool",
                   "EODTime"
                ]
             }
@@ -353,6 +377,9 @@
          "ParameterLabels":{
             "SchedulerMinutes":{
                "default":"Lambda Intervals"
+            },
+            "EODBool":{
+               "default":"Enable End of day power off"
             },
             "EODTime":{
                "default":"End of day hour (GMT)"
