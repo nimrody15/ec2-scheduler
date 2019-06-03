@@ -2,7 +2,7 @@
 
 EC2 Scheduler is a project that will help you manage your EC2 Instances power on/off policy.
 
-Deploy the Cloudformation is a region of your choice.
+Deploy the Cloudformation in a region of your choice.
 
 Tag the instances you want to manage and the scheduler will do the rest.
 
@@ -14,21 +14,19 @@ Tag Value: 09:00
 TagName: PowerOff  
 Tag Value: 18:00
 
-**That's it, you'r all set!** Instances will be powered on and off according to your tags
 
-## Read Before Running The Solution
+## End Of Day Shut Down
 
-1. The solution affecting only Instances With PowerOff/PowerOn tags, Instances without these tags are not affected
-           
-2. The Tags for PowerOn/PowerOff Should be in GMT time
+1. If you want to shut down all instances at the end of each day, choose end of day parameter to 'Yes'
 
-3. If you want all untagged Instances to power off (not related to PowerOff tag) every day at specific time, insert the time you want the Instances to be shut down and a Lambda will do the rest. If you don't, clear the field and the Lambda wont be triggered.
-**Important** If you Don't want the End Of Day solution and you don't clear the input field - ALL INSTANCES WILL BE SHUT DOWN.
+2. Insert the time want to shut down the instances (GMT)
+**Important** Once you choose 'Yes' - ALL INSTANCES WILL BE SHUT DOWN AT THAT SPECIFIC TIME.
 
-4. If you want to keep instances on add the below tag:
+3. If you want to keep instances and ignore end of day shut down,add the below tag:
 
 TagName: KeepAlive  
 Tag Value: true
+
 
 How To Use The Solution
 ------------------------
