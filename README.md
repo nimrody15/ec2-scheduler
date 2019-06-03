@@ -38,7 +38,7 @@ How To Use The Solution
 ![step1](https://i.postimg.cc/fTRGKZfR/cfn1.png "Step1")
 
 * Give the Cloudformation Stack a name, set the desired Lambda intervals (default 15 minutes)
-* Optional - Enter time for End of day Event to shut down all untagged instances
+* Optional - Choose End of day to shut down all untagged instances
 ![step2](https://i.postimg.cc/FKxWCqPK/ec2-scheduler.png "Step2")
 
 * Tag your instances
