@@ -9,12 +9,12 @@ def lambda_handler(event, context):
     ec2Client = boto3.client('ec2')
     regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]
     #regions = ['eu-north-1']
-    currentTime = datetime.now() + timedelta(hours=3)
+    currentTime = datetime.now() + timedelta(hours=0)
 
     for regionName in regions:
         print('-------- Region:{0} ---------'.format(regionName))
         ec2Client = boto3.client('ec2', region_name=regionName)
-        response = ec2Client.describe_instances(MaxResults=100)
+        response = ec2Client.describe_instances(MaxResults=1000)
 
         instancesToStop = []
         instancesToStart = []

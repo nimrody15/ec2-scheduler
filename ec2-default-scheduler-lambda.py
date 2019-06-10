@@ -38,8 +38,8 @@ def lambda_handler(event, context):
                             isKeepAlive = True if tag['Value'].lower() == 'true' else False
                             if isKeepAlive and state['Name'] == 'running':
                                 print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))
-                            else:
-                                instancesToStop.append(instanceId)
+                        else:
+                            instancesToStop.append(instanceId)
                 else:
                     instancesToStop.append(instanceId)
 
