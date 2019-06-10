@@ -237,7 +237,7 @@
             "Targets":[ {
                "Arn": {
                   "Fn::GetAtt":[
-                     "Ec2SchedulerLambda",
+                     "Ec2SchedulerEODLambda",
                      "Arn"
                   ]
                },
@@ -297,9 +297,9 @@
                         "                            isKeepAlive = True if tag['Value'].lower() == 'true' else False\n",
                         "                            if isKeepAlive and state['Name'] == 'running':\n",
                         "                                print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))\n",
-                        "                            else:\n",
-                        "                                instancesToStop.append(instanceId)\n",
-                        "                else:                \n",
+                        "                        else:\n",
+                        "                            instancesToStop.append(instanceId)\n",
+                        "                else:\n",
                         "                    instancesToStop.append(instanceId)\n",
                         "                \n",
                         "        if (len (instancesToStop) <= 0):\n",
