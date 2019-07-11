@@ -1,10 +1,13 @@
 import os
 import boto3
+import botocore
 import json
 
 def lambda_handler(event, context):
 
+
     ec2Client = boto3.client('ec2')
+
     regions = [region['RegionName'] for region in ec2Client.describe_regions()['Regions']]
     #regions = ['eu-north-1']
 
@@ -12,14 +15,12 @@ def lambda_handler(event, context):
         print('~~~~~~Region:{0}~~~~~~'.format(regionName))
         ec2Client = boto3.client('ec2', region_name=regionName)
         response = ec2Client.describe_instances(MaxResults=1000)
-        print (response)
 
         instancesToStop = []
         for reservations in response['Reservations']:
             instanceId = ''
             instanceName = ''
             state = ''
-            retainInstance = False
 
             for instanceDetails in reservations['Instances']:
                 instanceId = instanceDetails['InstanceId']
@@ -29,19 +30,19 @@ def lambda_handler(event, context):
                     continue
 
                 state = instanceDetails['State']
+                if state['Name'] == 'running':
+                    instancesToStop.append(instanceId)
+
                 if 'Tags' in instanceDetails:
                     for tag in instanceDetails['Tags']:
                         if tag['Key'] == 'Name':
-                            instanceName = tag['Value'] if tag['Value'] != '' else 'Instance with no name'
+                            instanceName = tag['Value'] if not tag['Value'] else 'Instance with no name'
 
                         if tag['Key'] == 'KeepAlive':
                             isKeepAlive = True if tag['Value'].lower() == 'true' else False
-                            if isKeepAlive and state['Name'] == 'running':
+                            if isKeepAlive:
                                 print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))
-                        else:
-                            instancesToStop.append(instanceId)
-                else:
-                    instancesToStop.append(instanceId)
+                                instancesToStop.remove(instanceId)
 
         if (len (instancesToStop) <= 0):
             print ('No Instances found to stop')
