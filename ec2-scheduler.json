@@ -296,7 +296,7 @@
                         "\n",
                         "                        if tag['Key'] == 'KeepAlive':\n",
                         "                            isKeepAlive = True if tag['Value'].lower() == 'true' else False\n",
-                        "                            if isKeepAlive:\n",
+                        "                            if isKeepAlive and state['Name'] == 'running':\n",
                         "                                print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))\n",
                         "                                instancesToStop.remove(instanceId)\n",
                         "                \n",

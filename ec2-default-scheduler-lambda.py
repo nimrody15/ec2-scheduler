@@ -40,7 +40,7 @@ def lambda_handler(event, context):
 
                         if tag['Key'] == 'KeepAlive':
                             isKeepAlive = True if tag['Value'].lower() == 'true' else False
-                            if isKeepAlive:
+                            if isKeepAlive and state['Name'] == 'running':
                                 print ('Instance {0} with keep alive tag -> ignoring'.format(instanceName))
                                 instancesToStop.remove(instanceId)
 
