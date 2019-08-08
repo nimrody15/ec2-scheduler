@@ -204,6 +204,25 @@
             "Runtime":"python3.6"
          }
       },
+      "Ec2SchedulerEODLambdaPermission":{
+         "Type":"AWS::Lambda::Permission",
+         "Properties":{
+            "Action":"lambda:InvokeFunction",
+            "FunctionName":{
+               "Fn::GetAtt":[
+                  "Ec2SchedulerEODLambda",
+                  "Arn"
+               ]
+            },
+            "Principal":"events.amazonaws.com",
+            "SourceArn":{
+               "Fn::GetAtt":[
+                  "CloudWatchEODTrigger",
+                  "Arn"
+               ]
+            }
+         }
+      },
       "CloudWatchEODTrigger":{
          "Type":"AWS::Events::Rule",
          "Properties":{
@@ -241,7 +260,7 @@
                      "Arn"
                   ]
                },
-               "Id": "Ec2_Scheduler_target"
+               "Id": "Ec2_Scheduler_target_EOD"
             }],
             "Name":"Ec2_Scheduler_EOD_Rule",
             "State":{
