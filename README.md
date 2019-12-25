@@ -31,6 +31,9 @@ Tag Value: true
 
 How To Use The Solution
 ------------------------
+Automatically: <a href="https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=myteststack&templateURL=https://pas-on-cloud.s3.eu-west-2.amazonaws.com/ec2-scheduler.json" target="_blank"><img src="https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png"/></a>
+
+Manually: 
 
 * Clone the solution to your computer
 
